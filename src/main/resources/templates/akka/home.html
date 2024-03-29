@@ -1,0 +1,30 @@
+<html xmlns:th="https://www.thymeleaf.org">
+    <body>
+        <h1>TP3 - Akka</h1>
+
+        <hr/>
+        <br/>
+
+
+
+        <h2>Initialisation des acteurs Akka</h2>
+        <form action="/akka/init" method="post">
+            <input type="Submit" ><br/>
+        </form>
+        <hr/>
+        <br/>
+
+        <h2>Fichier à analyser</h2>
+        <form action="/akka/addFichier" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" id="fileInput">
+            <button type="submit">Submit</button>
+        </form>
+
+        
+        <hr/>
+        <br/>
+
+
+
+    </body>
+</html>
