@@ -1,0 +1,2 @@
+^self grid:(CTNewArray2D  new setWidth: 4 setHeight: 4).
+board := aBoard.
