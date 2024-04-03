@@ -8,7 +8,7 @@ public interface AkkaService {
 
     void init();
 
-    void submitFile(MultipartFile file, String uploadDir) throws IOException;
+    void submitFile(MultipartFile file) throws IOException;
 
     int occurance(String nom);
 }

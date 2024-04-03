@@ -37,9 +37,7 @@ public class AkkaController {
         if (file.isEmpty()) {
             return "redirect:/akka/home";
         }
-        // cree le chemain pour sauvgarder le fichier
-        String filePath = System.getProperty("user.dir");
-        akkaService.submitFile(file, filePath);
+        akkaService.submitFile(file);
         return "redirect:/akka/home";
     }
 

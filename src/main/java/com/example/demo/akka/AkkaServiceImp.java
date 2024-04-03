@@ -1,8 +1,6 @@
 package com.example.demo.akka;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -24,10 +22,9 @@ import scala.concurrent.duration.FiniteDuration;
 public class AkkaServiceImp implements AkkaService {
 
     ActorSystem system = ActorSystem.create("Mysystem");
-
+    Inbox inbox = Inbox.create(system);
     private List<ActorRef> mappers;
     private List<ActorRef> reducers;
-    private String filePath;
 
     @Override
     public void init() {
@@ -52,56 +49,41 @@ public class AkkaServiceImp implements AkkaService {
     }
 
     @Override
-    public void submitFile(MultipartFile file, String uploadDir) {
+    public void submitFile(MultipartFile file) throws IOException {
 
-        // Dans cette methode, on sauvgarde le fichier pour l'utiliser dans la methode
-        // occurance
-        // Obtient le nom du fichier d'origine
-        String originalFileName = file.getOriginalFilename();
-
-        // Crée le chemin pour le fichier sur le serveur
-        filePath = uploadDir + File.separator + originalFileName;
-
-        // Transfère le contenu du fichier multipart vers le fichier de destination
-        try {
-            file.transferTo(new File(filePath));
-        } catch (IllegalStateException e) {
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    @Override
-    public int occurance(String mot) {
-
-        Inbox inbox = Inbox.create(system);
-        int counter = 0;
-        // Object reply = null;
-        // cree un copy de fichier pour envoyer aux mappers
-        File file = new File(filePath);
         if (file != null) {
             // cree un reader d'optenir les ligne du fichier
-            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            try (InputStream fileIStream = file.getInputStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(fileIStream))) {
                 String line;
                 int i = 0;
                 while ((line = reader.readLine()) != null) {
                     System.out.println(line);
                     // envoye chque ligne à un mapper
-                    inbox.send(mappers.get(i), new RequestMessage(mot + " " + line));
+                    inbox.send(mappers.get(i), new RequestMessage(line));
                     i = (i + 1) % mappers.size();
-                    // recupere la reponse
-                    // try {
-                    // reply = inbox.receive(FiniteDuration.create(30, TimeUnit.SECONDS));
-                    //////////// }
-
                 }
-
-            } catch (IOException e) {
-
-                e.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public int occurance(String mot) {
+
+        int counter = 0;
+
+        inbox.send(mappers.get(1), new RequestMot(mot));
+        Object reply = null;
+        // recupere la reponse
+        try {
+            reply = inbox.receive(FiniteDuration.create(30, TimeUnit.SECONDS));
+            if (reply instanceof ReponsMessage rpm) {
+                counter = rpm.counter();
+            }
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
+
         System.out.println(counter);
         return counter;
     }
