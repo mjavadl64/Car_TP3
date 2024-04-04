@@ -21,7 +21,8 @@ public class ReducerActor extends UntypedActor {
             String mot = rqm.mot();
             // envoier la reponse à AkkaServiceImpl
             if (motOccurances.containsKey(mot)) {
-                // int i = motOccurances.get(mot);
+                int i = motOccurances.get(mot);
+                // System.out.println(i);
                 getSender().tell(new ReponsMessage(motOccurances.get(mot)), getSelf());
             } else {
                 getSender().tell(new ReponsMessage(0), getSelf());

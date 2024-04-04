@@ -22,7 +22,7 @@ import scala.concurrent.duration.FiniteDuration;
 public class AkkaServiceImp implements AkkaService {
 
     ActorSystem system = ActorSystem.create("Mysystem");
-    Inbox inbox = Inbox.create(system);
+
     private List<ActorRef> mappers;
     private List<ActorRef> reducers;
 
@@ -50,7 +50,7 @@ public class AkkaServiceImp implements AkkaService {
 
     @Override
     public void submitFile(MultipartFile file) throws IOException {
-
+        Inbox inbox = Inbox.create(system);
         if (file != null) {
             // cree un reader d'optenir les ligne du fichier
             try (InputStream fileIStream = file.getInputStream();
@@ -71,8 +71,13 @@ public class AkkaServiceImp implements AkkaService {
     public int occurance(String mot) {
 
         int counter = 0;
-
-        inbox.send(mappers.get(1), new RequestMot(mot));
+        Inbox inbox = Inbox.create(system);
+        int reducerNumber = Math.abs(mot.hashCode()) % 2 + 1;
+        if (reducerNumber == 1) {
+            inbox.send(reducers.get(0), new RequestMot(mot.toLowerCase()));
+        } else if (reducerNumber == 2) {
+            inbox.send(reducers.get(1), new RequestMot(mot.toLowerCase()));
+        }
         Object reply = null;
         // recupere la reponse
         try {
@@ -84,7 +89,6 @@ public class AkkaServiceImp implements AkkaService {
             e.printStackTrace();
         }
 
-        System.out.println(counter);
         return counter;
     }
 
