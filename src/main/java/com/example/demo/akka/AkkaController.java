@@ -39,6 +39,7 @@ public class AkkaController {
         if (file.isEmpty()) {
             return "redirect:/akka/home";
         }
+        //this.init();
         akkaService.submitFile(file);
         return "redirect:/akka/home";
     }

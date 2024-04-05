@@ -21,42 +21,35 @@ import scala.concurrent.duration.FiniteDuration;
 @Service
 public class AkkaServiceImp implements AkkaService {
 
-    ActorSystem system = ActorSystem.create("Mysystem");
+    ActorSystem systemMapper = ActorSystem.create("systemMapper");
+    ActorSystem systemReducer = ActorSystem.create("systemReducer");
 
-    private List<ActorRef> mappers;
-    private List<ActorRef> reducers;
+    private List<ActorRef> mappers = new ArrayList<>();
+    private List<ActorRef> reducers = new ArrayList<>();
+    
 
+   
     @Override
     public void init() {
 
-        mappers = new ArrayList<>();
-        reducers = new ArrayList<>();
+        for (int i = 1; i<3 ; i++){
+            ActorRef reducer = systemReducer.actorOf(Props.create(ReducerActor.class),"reducer"+i);
+            this.reducers.add(reducer);
+        }
 
-        // Creez 2 reduceres et ajouter dans la liste reducers
-        ActorRef reducer1 = system.actorOf(Props.create(ReducerActor.class), "reducer1");
-        ActorRef reducer2 = system.actorOf(Props.create(ReducerActor.class), "reducer2");
-        reducers.add(reducer1);
-        reducers.add(reducer2);
-
-        // Creez 3 mapper en liant avec deux reducers et ajouter dans la liste mappers
-        ActorRef mapper1 = system.actorOf(Props.create(MapperActor.class), "mapper1");
-        mapper1.tell(reducer1, ActorRef.noSender());
-        mapper1.tell(reducer2, ActorRef.noSender());
-        ActorRef mapper2 = system.actorOf(Props.create(MapperActor.class), "mapper2");
-        mapper2.tell(reducer1, ActorRef.noSender());
-        mapper2.tell(reducer2, ActorRef.noSender());
-        ActorRef mapper3 = system.actorOf(Props.create(MapperActor.class), "mapper3");
-        mapper3.tell(reducer1, ActorRef.noSender());
-        mapper3.tell(reducer2, ActorRef.noSender());
-        mappers.add(mapper1);
-        mappers.add(mapper2);
-        mappers.add(mapper3);
+        for (int i = 1; i<4; i++){
+            ActorRef mapper = systemMapper.actorOf(Props.create(MapperActor.class),"mapper"+i);
+            mapper.tell(reducers.get(0),ActorRef.noSender());
+            mapper.tell(reducers.get(1),ActorRef.noSender());
+            this.mappers.add(mapper);
+        }
+    
 
     }
 
     @Override
     public void submitFile(MultipartFile file) throws IOException {
-        Inbox inbox = Inbox.create(system);
+        Inbox inbox = Inbox.create(systemMapper);
         if (file != null) {
             // cree un reader d'optenir les ligne du fichier
             try (InputStream fileIStream = file.getInputStream();
@@ -64,8 +57,7 @@ public class AkkaServiceImp implements AkkaService {
                 String line;
                 int i = 0;
                 while ((line = reader.readLine()) != null) {
-                    System.out.println(line);
-                    // envoye chque ligne à un mapper
+                    // envoye chaque ligne à un mapper
                     inbox.send(mappers.get(i), new RequestMessage(line));
                     i = (i + 1) % mappers.size();
                 }
@@ -77,7 +69,8 @@ public class AkkaServiceImp implements AkkaService {
     public int occurance(String mot) {
 
         int counter = 0;
-        Inbox inbox = Inbox.create(system);
+        Inbox inbox = Inbox.create(systemReducer);
+        //reducerNumber pour savoir à quel reducer je vais demander le mot
         int reducerNumber = Math.abs(mot.hashCode()) % reducers.size() ;
         inbox.send(reducers.get(reducerNumber), new RequestMot(mot.toLowerCase()));
         Object reply = null;
