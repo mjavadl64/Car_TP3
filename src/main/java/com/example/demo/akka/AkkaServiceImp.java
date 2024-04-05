@@ -39,9 +39,15 @@ public class AkkaServiceImp implements AkkaService {
         reducers.add(reducer2);
 
         // Creez 3 mapper en liant avec deux reducers et ajouter dans la liste mappers
-        ActorRef mapper1 = system.actorOf(Props.create(MapperActor.class, reducer1, reducer2), "mapper1");
-        ActorRef mapper2 = system.actorOf(Props.create(MapperActor.class, reducer1, reducer2), "mapper2");
-        ActorRef mapper3 = system.actorOf(Props.create(MapperActor.class, reducer1, reducer2), "mapper3");
+        ActorRef mapper1 = system.actorOf(Props.create(MapperActor.class), "mapper1");
+        mapper1.tell(reducer1, ActorRef.noSender());
+        mapper1.tell(reducer2, ActorRef.noSender());
+        ActorRef mapper2 = system.actorOf(Props.create(MapperActor.class), "mapper2");
+        mapper2.tell(reducer1, ActorRef.noSender());
+        mapper2.tell(reducer2, ActorRef.noSender());
+        ActorRef mapper3 = system.actorOf(Props.create(MapperActor.class), "mapper3");
+        mapper3.tell(reducer1, ActorRef.noSender());
+        mapper3.tell(reducer2, ActorRef.noSender());
         mappers.add(mapper1);
         mappers.add(mapper2);
         mappers.add(mapper3);
@@ -72,12 +78,8 @@ public class AkkaServiceImp implements AkkaService {
 
         int counter = 0;
         Inbox inbox = Inbox.create(system);
-        int reducerNumber = Math.abs(mot.hashCode()) % 2 + 1;
-        if (reducerNumber == 1) {
-            inbox.send(reducers.get(0), new RequestMot(mot.toLowerCase()));
-        } else if (reducerNumber == 2) {
-            inbox.send(reducers.get(1), new RequestMot(mot.toLowerCase()));
-        }
+        int reducerNumber = Math.abs(mot.hashCode()) % reducers.size() ;
+        inbox.send(reducers.get(reducerNumber), new RequestMot(mot.toLowerCase()));
         Object reply = null;
         // recupere la reponse
         try {
@@ -88,7 +90,6 @@ public class AkkaServiceImp implements AkkaService {
         } catch (TimeoutException e) {
             e.printStackTrace();
         }
-
         return counter;
     }
 

@@ -20,9 +20,14 @@
         <br/>
         <h2>Resultat</h2>
 
-        <form action="/akka/serachMot" method="post">
+        <form action="/akka/searchMot" method="post">
+                Occurrence : <span th:text="${occurance}"></span><br/>
+                Mot : <span th:text="${mot}"></span>
+            <hr/>
+
             Mot :<input type="text" name="mot"></br>
             <input type="Submit" ><br/>
+            
         </form>       
         <hr/>
         <br/>

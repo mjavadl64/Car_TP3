@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +17,7 @@ public class AkkaController {
 
     @Autowired
     private AkkaService akkaService;
+
 
     @GetMapping("/home")
     public String home() {
@@ -41,15 +43,19 @@ public class AkkaController {
         return "redirect:/akka/home";
     }
 
-    @PostMapping("/serachMot")
-    public String serchMot(@RequestParam String mot) {
+    @PostMapping("/searchMot")
+    public String searchMot(@RequestParam String mot,Model model ) {
         // verifier si le mot est vid, on fait rien.
         if (mot.isEmpty()) {
             return "redirect:/akka/home";
         }
-        int count = akkaService.occurance(mot);
-        return "redirect:/akka/home";
+        int occurance = akkaService.occurance(mot);
+        model.addAttribute("occurance", occurance);
+        model.addAttribute("mot", mot);
+        return "/akka/home";
 
     }
+
+
 
 }
