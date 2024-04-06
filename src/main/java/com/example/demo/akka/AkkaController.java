@@ -18,7 +18,6 @@ public class AkkaController {
     @Autowired
     private AkkaService akkaService;
 
-
     @GetMapping("/home")
     public String home() {
         return "akka/home";
@@ -39,13 +38,14 @@ public class AkkaController {
         if (file.isEmpty()) {
             return "redirect:/akka/home";
         }
-        //this.init();
+        // refait pour cree des mappers er reducers de nouveau fichier
+        this.init();
         akkaService.submitFile(file);
         return "redirect:/akka/home";
     }
 
     @PostMapping("/searchMot")
-    public String searchMot(@RequestParam String mot,Model model ) {
+    public String searchMot(@RequestParam String mot, Model model) {
         // verifier si le mot est vid, on fait rien.
         if (mot.isEmpty()) {
             return "redirect:/akka/home";
@@ -56,7 +56,5 @@ public class AkkaController {
         return "/akka/home";
 
     }
-
-
 
 }

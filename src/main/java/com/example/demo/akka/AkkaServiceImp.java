@@ -4,8 +4,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -24,26 +26,30 @@ public class AkkaServiceImp implements AkkaService {
     ActorSystem systemMapper = ActorSystem.create("systemMapper");
     ActorSystem systemReducer = ActorSystem.create("systemReducer");
 
-    private List<ActorRef> mappers = new ArrayList<>();
-    private List<ActorRef> reducers = new ArrayList<>();
-    
+    private List<ActorRef> mappers;
+    private List<ActorRef> reducers;
 
-   
     @Override
     public void init() {
 
-        for (int i = 1; i<3 ; i++){
-            ActorRef reducer = systemReducer.actorOf(Props.create(ReducerActor.class),"reducer"+i);
+        this.mappers = new ArrayList<>();
+        this.reducers = new ArrayList<>();
+
+        for (int i = 1; i < 3; i++) {
+            // cree un nom random pour reducer d'eviter nommer uniquement
+            String reducerName = "reducer_" + UUID.randomUUID().toString();
+            ActorRef reducer = systemReducer.actorOf(Props.create(ReducerActor.class), "reducer" + reducerName);
             this.reducers.add(reducer);
         }
 
-        for (int i = 1; i<4; i++){
-            ActorRef mapper = systemMapper.actorOf(Props.create(MapperActor.class),"mapper"+i);
-            mapper.tell(reducers.get(0),ActorRef.noSender());
-            mapper.tell(reducers.get(1),ActorRef.noSender());
+        for (int i = 1; i < 4; i++) {
+            // cree un nom random pour mapper d'eviter nommer uniquement
+            String mapperName = "mapper_" + UUID.randomUUID().toString();
+            ActorRef mapper = systemMapper.actorOf(Props.create(MapperActor.class), "mapper" + mapperName);
+            mapper.tell(reducers.get(0), ActorRef.noSender());
+            mapper.tell(reducers.get(1), ActorRef.noSender());
             this.mappers.add(mapper);
         }
-    
 
     }
 
@@ -70,8 +76,8 @@ public class AkkaServiceImp implements AkkaService {
 
         int counter = 0;
         Inbox inbox = Inbox.create(systemReducer);
-        //reducerNumber pour savoir à quel reducer je vais demander le mot
-        int reducerNumber = Math.abs(mot.hashCode()) % reducers.size() ;
+        // reducerNumber pour savoir à quel reducer je vais demander le mot
+        int reducerNumber = Math.abs(mot.hashCode()) % reducers.size();
         inbox.send(reducers.get(reducerNumber), new RequestMot(mot.toLowerCase()));
         Object reply = null;
         // recupere la reponse
